@@ -147,6 +147,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="A-Star Algorithm\A-Star.h" />
     <ClCompile Include="cBasicTextureManager\C24BitBMPpixel.cpp" />
     <ClCompile Include="cBasicTextureManager\cBasicTextureManager.cpp" />
     <ClCompile Include="cBasicTextureManager\CTextureFromBMP.cpp" />
@@ -187,6 +188,11 @@
   <ItemGroup>
     <Text Include="File Stream\readFile.txt" />
     <Text Include="File Stream\sceneDescription.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\assets\shaders\fragmentShader.glsl" />
+    <None Include="..\assets\shaders\geometryShader_passthrough.glsl" />
+    <None Include="..\assets\shaders\vertexShader.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

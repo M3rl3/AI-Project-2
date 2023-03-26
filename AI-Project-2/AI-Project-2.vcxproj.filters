@@ -66,6 +66,9 @@
     <ClCompile Include="PlyFileLoader\PlyFileLoader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="A-Star Algorithm\A-Star.h">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="OpenGL.h">
@@ -123,5 +126,10 @@
   <ItemGroup>
     <Text Include="File Stream\readFile.txt" />
     <Text Include="File Stream\sceneDescription.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\assets\shaders\fragmentShader.glsl" />
+    <None Include="..\assets\shaders\geometryShader_passthrough.glsl" />
+    <None Include="..\assets\shaders\vertexShader.glsl" />
   </ItemGroup>
 </Project>

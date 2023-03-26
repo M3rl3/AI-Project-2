@@ -3,6 +3,7 @@
 #include "cMeshInfo/cMeshInfo.h"
 #include "Draw Mesh/DrawMesh.h"
 #include "Draw Bounding Box/DrawBoundingBox.h"
+//#include "A-Star Algorithm/A-Star.h"
 
 #include <glm/glm.hpp>
 #include <glm/vec4.hpp>
@@ -56,12 +57,14 @@ bool mouseClick = false;
 std::vector <std::string> meshFiles;
 std::vector <cMeshInfo*> meshArray;
 
-void ReadFromFile();
-void LoadTextures();
-void ManageLights();
+void ReadFromFile(std::string filePath);
+void LoadTextures(void);
+void ManageLights(void);
 float RandomFloat(float a, float b);
 bool RandomizePositions(cMeshInfo* mesh);
 void LoadPlyFilesIntoVAO(void);
+int A_STAR_DRIVER();
+bool BitmapStream(std::string filePath);
 void RenderToFBO(GLFWwindow* window, sCamera* camera, glm::mat4& view, glm::mat4& projection,
     GLuint eyeLocationLocation, GLuint viewLocation, GLuint projectionLocation,
     GLuint modelLocaction, GLuint modelInverseLocation);
@@ -300,12 +303,12 @@ static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, i
                         player_mesh->velocity += PLAYER_MOVE_SPEED * strafeDirection;
                         player_mesh->rotation = glm::quat(glm::vec3(0.0f, glm::radians(-90.0f), 0.0f));
                     }
-                    if (key == GLFW_KEY_Q) {
-                        player_mesh->velocity += PLAYER_MOVE_SPEED * upVector;
-                    }
-                    if (key == GLFW_KEY_E) {
-                        player_mesh->velocity += -PLAYER_MOVE_SPEED * upVector;
-                    }
+                    //if (key == GLFW_KEY_Q) {
+                    //    player_mesh->velocity += PLAYER_MOVE_SPEED * upVector;
+                    //}
+                    //if (key == GLFW_KEY_E) {
+                    //    player_mesh->velocity += -PLAYER_MOVE_SPEED * upVector;
+                    //}
                 }
                 else {
                     if (key == GLFW_KEY_W) {
@@ -324,12 +327,12 @@ static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, i
                         player_mesh->velocity.x = -PLAYER_MOVE_SPEED;
                         player_mesh->rotation = glm::quat(glm::vec3(0.0f, glm::radians(90.0f), 0.0f));
                     }
-                    if (key == GLFW_KEY_Q) {
-                        player_mesh->velocity.y = PLAYER_MOVE_SPEED;
-                    }
-                    if (key == GLFW_KEY_E) {
-                        player_mesh->velocity.y = -PLAYER_MOVE_SPEED;
-                    }
+                    //if (key == GLFW_KEY_Q) {
+                    //    player_mesh->velocity.y = PLAYER_MOVE_SPEED;
+                    //}
+                    //if (key == GLFW_KEY_E) {
+                    //    player_mesh->velocity.y = -PLAYER_MOVE_SPEED;
+                    //}
                 }
             }
             else if (action == GLFW_RELEASE) {
@@ -372,6 +375,7 @@ static void MouseCallBack(GLFWwindow* window, double xposition, double yposition
     front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
     front.y = sin(glm::radians(pitch));
     front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+
     if (enableMouse) {
         camera->target = glm::normalize(front);
     }
@@ -505,7 +509,7 @@ void Render() {
     glUseProgram(shaderID);
 
     // Load asset paths from external file
-    ReadFromFile();
+    ReadFromFile("./File Stream/readFile.txt");
 
     // Load the ply model
     plyLoader = new PlyFileLoader();
@@ -523,7 +527,7 @@ void Render() {
     LightMan = new cLightManager();
 
     // Pre-existing light, independent of the scene lighting
-    ambientLight = 0.5f;
+    ambientLight = 0.75f;
     LightMan->SetAmbientLightAmount(ambientLight);
 
     constLightAtten = glm::vec4(0.1f, 2.5e-5f, 2.5e-5f, 1.0f);
@@ -551,7 +555,7 @@ void Render() {
     terrain_mesh->friendlyName = "terrain";
     terrain_mesh->RGBAColour = terrainColor;
     terrain_mesh->useRGBAColour = true;
-    terrain_mesh->isVisible = true;
+    terrain_mesh->isVisible = false;
     terrain_mesh->doNotLight = false;
     meshArray.push_back(terrain_mesh);
 
@@ -559,8 +563,12 @@ void Render() {
     flat_plain->meshName = "flat_plain";
     flat_plain->friendlyName = "flat_plain";
     flat_plain->RGBAColour = terrainColor;
-    flat_plain->useRGBAColour = true;
+    flat_plain->useRGBAColour = false;
+    flat_plain->hasTexture = true;
+    flat_plain->textures[0] = "traversal_graph.bmp";
+    flat_plain->textureRatios[0] = 1.f;
     flat_plain->doNotLight = false;
+    flat_plain->isVisible = true;
     meshArray.push_back(flat_plain);
 
     player_mesh = new cMeshInfo();
@@ -587,10 +595,19 @@ void Render() {
     quad_mesh->meshName = "fullScreenQuad";
     quad_mesh->friendlyName = "quad";
     quad_mesh->doNotLight = false;
+    quad_mesh->isVisible = false;
     quad_mesh->hasTexture = true;
+    quad_mesh->textures[0] = "traversal_graph.bmp";
     quad_mesh->textureIDs[0] = FrameBuffer->colourTexture_0_ID;
     quad_mesh->textureRatios[0] = 1.f;
     meshArray.push_back(quad_mesh);
+
+    cMeshInfo* cube = new cMeshInfo();
+    cube->meshName = "wall_cube";
+    cube->friendlyName = "wall_cube";
+    cube->useRGBAColour = true;
+    cube->RGBAColour = glm::vec4(0.f, 0.f, 255.f, 1.f);
+    meshArray.push_back(cube);
 
     skybox_sphere_mesh = new cMeshInfo();
     skybox_sphere_mesh->meshName = "skybox_sphere";
@@ -607,6 +624,10 @@ void Render() {
 
     // reads scene descripion files for positioning and other info
     ReadSceneDescription(meshArray);
+
+    if (!BitmapStream("../assets/textures/traversal_graph.bmp")) {
+        std::cout << "Could not open BMP file." << std::endl;
+    }
 }
 
 void Update() {
@@ -758,16 +779,109 @@ void Shutdown() {
     exit(EXIT_SUCCESS);
 }
 
-void ReadFromFile() {
+void ReadFromFile(std::string filePath) {
 
-    std::ifstream readFile("./File Stream/readFile.txt");
+    std::ifstream readFile;
+
+    readFile.open(filePath);
+
+    if (!readFile.is_open()) {
+        readFile.close();
+        return;
+    }
+
     std::string input0;
 
     while (readFile >> input0) {
         meshFiles.push_back(input0);
         readIndex++;
-    }  
+    }
+
+    readFile.close();
 }
+
+struct BMPHeader {
+    unsigned char headerField[2];
+    unsigned char sizeOfBMP[4];
+    unsigned char reserved1[2];
+    unsigned char reserved2[2];
+    unsigned char dataOffset[4];
+};
+
+struct Color {
+    unsigned char r;
+    unsigned char g;
+    unsigned char b;
+};
+
+bool BitmapStream(std::string filePath) {
+
+    std::ifstream bmpStream;
+    bmpStream.open(filePath);
+
+    if (!bmpStream.is_open()) {
+        return false;
+    }
+
+    bmpStream.seekg(0);
+
+    BMPHeader fileHeader;
+    bmpStream.read((char*)&fileHeader.headerField, sizeof(fileHeader));
+    bmpStream.seekg(fileHeader.dataOffset[0]);
+
+    printf("\n");
+
+    Color color;
+    for (int i = 0; i < 4096; i++) {
+        bmpStream.read((char*)&color, 3);
+
+        if (color.r == 36 && color.g == 28 && color.b == 237) {
+            printf("Goal!\n");
+        }
+        if (color.r == 76 && color.g == 177 && color.b == 34) {
+            printf("Start!\n");
+        }
+        if (color.r == 0 && color.b == 0 && color.g == 0) {
+            printf("Wall!\n");
+        }
+        if (color.r == 255 && color.g == 255 && color.b == 255) {
+
+        }
+
+        //printf("%d %d %d\n", color.r, color.g, color.b);
+    }
+
+    bmpStream.close();
+    return true;
+}
+
+// Driver program to A-Star search algorithm
+//int A_STAR_DRIVER() {
+//
+//    /* Description of the Grid-
+//    1--> The cell is not blocked
+//    0--> The cell is blocked */
+//    int grid[ROW][COL]
+//        = { { 1, 0, 1, 1, 1, 1, 0, 1, 1, 1 },
+//            { 1, 1, 1, 0, 1, 1, 1, 0, 1, 1 },
+//            { 1, 1, 1, 0, 1, 1, 0, 1, 0, 1 },
+//            { 0, 0, 1, 0, 1, 0, 0, 0, 0, 1 },
+//            { 1, 1, 1, 0, 1, 1, 1, 0, 1, 0 },
+//            { 1, 0, 1, 1, 1, 1, 0, 1, 0, 0 },
+//            { 1, 0, 0, 0, 0, 1, 0, 0, 0, 1 },
+//            { 1, 0, 1, 1, 1, 1, 0, 1, 1, 1 },
+//            { 1, 1, 1, 0, 0, 0, 1, 0, 0, 1 } };
+//
+//    // Source is the left-most bottom-most corner
+//    Pair src = make_pair(8, 0);
+//
+//    // Destination is the left-most top-most corner
+//    Pair dest = make_pair(0, 0);
+//
+//    aStarSearch(grid, src, dest);
+//
+//    return (0);
+//}
 
 // All lights managed here
 void ManageLights() {
@@ -908,6 +1022,15 @@ void LoadTextures() {
     {
         std::cout << "Error: failed to load basketball texture.";
     }
+    
+    if (TextureMan->Create2DTextureFromBMPFile("traversal_graph.bmp"))
+    {
+        std::cout << "Loaded traversal_graph texture." << std::endl;
+    }
+    else
+    {
+        std::cout << "Error: failed to load traversal_graph texture.";
+    }
 }
 
 float RandomFloat(float a, float b) {
@@ -966,14 +1089,14 @@ void RenderToFBO(GLFWwindow* window, sCamera* camera, glm::mat4& view, glm::mat4
     glUniform1i(FBO_TextureLocation, texture21Unit);
 
     // Crosshair Texture
-    GLuint crosshairTextureID = TextureMan->getTextureIDFromName("crosshair.bmp");
-
-    GLuint texture15Unit = 15;
-    glActiveTexture(texture15Unit + GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, crosshairTextureID);
-
-    GLint crosshairTextureLocation = glGetUniformLocation(shaderID, "crosshair_texture");
-    glUniform1i(crosshairTextureLocation, texture15Unit);
+    // GLuint crosshairTextureID = TextureMan->getTextureIDFromName("crosshair.bmp");
+    // 
+    // GLuint texture15Unit = 15;
+    // glActiveTexture(texture15Unit + GL_TEXTURE0);
+    // glBindTexture(GL_TEXTURE_2D, crosshairTextureID);
+    // 
+    // GLint crosshairTextureLocation = glGetUniformLocation(shaderID, "crosshair_texture");
+    // glUniform1i(crosshairTextureLocation, texture15Unit);
 
     full_screen_quad->SetUniformScale(10.f);
     full_screen_quad->isVisible = true;
@@ -1042,12 +1165,6 @@ void LoadPlyFilesIntoVAO(void)
     sModelDrawInfo wall_cube;
     plyLoader->LoadModel(meshFiles[2], wall_cube);
     if (!VAOMan->LoadModelIntoVAO("wall_cube", wall_cube, shaderID)) {
-        std::cerr << "Could not load model into VAO" << std::endl;
-    }
-
-    sModelDrawInfo beholder;
-    plyLoader->LoadModel(meshFiles[3], beholder);
-    if (!VAOMan->LoadModelIntoVAO("beholder", beholder, shaderID)) {
         std::cerr << "Could not load model into VAO" << std::endl;
     }
     
