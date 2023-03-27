@@ -145,10 +145,6 @@ static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, i
     {
         theEditMode = MOVING_SELECTED_OBJECT;
     }
-    if (key == GLFW_KEY_F && action == GLFW_PRESS)
-    {
-        theEditMode = TAKE_CONTROL;
-    }
     if (key == GLFW_KEY_L && action == GLFW_PRESS) 
     {
         theEditMode = MOVING_LIGHT;
@@ -292,67 +288,6 @@ static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, i
             }
         }
         break;
-        case TAKE_CONTROL: 
-        {
-            constexpr float PLAYER_MOVE_SPEED = 5.f;
-            glm::vec3 strafeDirection = glm::cross(camera->target, upVector);
-            player_mesh->velocity.y = 0.f;
-
-            if (action == GLFW_PRESS) {
-                if (enableMouse) {
-                    if (key == GLFW_KEY_W) {
-                        player_mesh->velocity += PLAYER_MOVE_SPEED * camera->target;
-                        player_mesh->rotation = glm::quat(glm::vec3(0.0f, glm::radians(0.0f), 0.0f));
-                    }
-                    if (key == GLFW_KEY_S) {
-                        player_mesh->velocity += -PLAYER_MOVE_SPEED * camera->target;
-                        player_mesh->rotation = glm::quat(glm::vec3(0.0f, glm::radians(180.0f), 0.0f));
-                    }
-                    if (key == GLFW_KEY_A) {
-                        player_mesh->velocity += -PLAYER_MOVE_SPEED * strafeDirection;
-                        player_mesh->rotation = glm::quat(glm::vec3(0.0f, glm::radians(90.0f), 0.0f));
-                    }
-                    if (key == GLFW_KEY_D) {
-                        player_mesh->velocity += PLAYER_MOVE_SPEED * strafeDirection;
-                        player_mesh->rotation = glm::quat(glm::vec3(0.0f, glm::radians(-90.0f), 0.0f));
-                    }
-                    //if (key == GLFW_KEY_Q) {
-                    //    player_mesh->velocity += PLAYER_MOVE_SPEED * upVector;
-                    //}
-                    //if (key == GLFW_KEY_E) {
-                    //    player_mesh->velocity += -PLAYER_MOVE_SPEED * upVector;
-                    //}
-                }
-                else {
-                    if (key == GLFW_KEY_W) {
-                        player_mesh->velocity.z = PLAYER_MOVE_SPEED;
-                        player_mesh->rotation = glm::quat(glm::vec3(0.0f, glm::radians(180.0f), 0.0f));
-                    }
-                    if (key == GLFW_KEY_S) {
-                        player_mesh->velocity.z = -PLAYER_MOVE_SPEED;
-                        player_mesh->rotation = glm::quat(glm::vec3(0.0f, glm::radians(0.0f), 0.0f));
-                    }
-                    if (key == GLFW_KEY_A) {
-                        player_mesh->velocity.x = PLAYER_MOVE_SPEED;
-                        player_mesh->rotation = glm::quat(glm::vec3(0.0f, glm::radians(-90.0f), 0.0f));
-                    }
-                    if (key == GLFW_KEY_D) {
-                        player_mesh->velocity.x = -PLAYER_MOVE_SPEED;
-                        player_mesh->rotation = glm::quat(glm::vec3(0.0f, glm::radians(90.0f), 0.0f));
-                    }
-                    //if (key == GLFW_KEY_Q) {
-                    //    player_mesh->velocity.y = PLAYER_MOVE_SPEED;
-                    //}
-                    //if (key == GLFW_KEY_E) {
-                    //    player_mesh->velocity.y = -PLAYER_MOVE_SPEED;
-                    //}
-                }
-            }
-            else if (action == GLFW_RELEASE) {
-                player_mesh->KillAllForces();
-            }
-        }
-        break;
     }
 }
 
@@ -467,7 +402,8 @@ void Initialize() {
     camera = new sCamera();
 
     // Init camera object
-    camera->position = glm::vec3(-280.0, 140.0, -700.0);
+    //camera->position = glm::vec3(-280.0, 140.0, -700.0);
+    camera->position = glm::vec3(-530, 2500.0, -675.0);
     camera->target = glm::vec3(0.f, 0.f, 1.f);
 
     // Init imgui for crosshair
@@ -657,15 +593,16 @@ void Render() {
     // Destination
     Pair dest = make_pair(7, 48);
 
+    // Object
     A_STAR aStar;
 
+    // Run the actual search and print results
     aStar.aStarSearch(simplifiedGraph, src, dest);
 
+    // Get the path that was found
     path = aStar.GetPath();
 
     std::cout << std::endl;
-
-    int breakPoint = 0;
 }
 
 void Update() {
@@ -724,13 +661,9 @@ void Update() {
     glUniformMatrix4fv(viewLocation, 1, GL_FALSE, glm::value_ptr(view));
     glUniformMatrix4fv(projectionLocation, 1, GL_FALSE, glm::value_ptr(projection));
 
-    if (theEditMode == TAKE_CONTROL) {
-        camera->position = player_mesh->position - glm::vec3(0.f, -10.f, 100.f);
-        // bulb_mesh->position = player_mesh->position - glm::vec3(0.f, -175.f, 75.f);
-
-        if (!enableMouse) {
-            camera->target = player_mesh->position;
-        }
+    // Set the camera to follow the agent
+    if (!enableMouse) {
+        camera->target = agent->position;
     }
     
     elapsed_frames++;
@@ -739,10 +672,13 @@ void Update() {
 
         cMeshInfo* currentMesh = meshArray[i];
 
+        // Check if the current object is the agent
         if (currentMesh->friendlyName == "agent") {
 
+            // Assign Position
             currentMesh->position = positions[(int)path[index].x][(int)path[index].y];
 
+            // Move to the next position after x amount of frames
             if (elapsed_frames > 50) {
                 if (index == path.size() - 1) {
                     index = path.size() - 1;
@@ -995,36 +931,6 @@ void GenerateCubes(glm::vec3& startPos, float tileSize, std::vector<cMeshInfo*>&
         startPos.z += tileSize;
     }
     int breakPoint = 0;
-}
-
-// Driver program to A-Star search algorithm
-int A_STAR_DRIVER() {
-
-    /* Description of the Grid-
-    1--> The cell is not blocked
-    0--> The cell is blocked */
-    /*int grid[ROW][COL]
-        = { { 1, 0, 1, 1, 1, 1, 0, 1, 1, 1 },
-            { 1, 1, 1, 0, 1, 1, 1, 0, 1, 1 },
-            { 1, 1, 1, 0, 1, 1, 0, 1, 0, 1 },
-            { 0, 0, 1, 0, 1, 0, 0, 0, 0, 1 },
-            { 1, 1, 1, 0, 1, 1, 1, 0, 1, 0 },
-            { 1, 0, 1, 1, 1, 1, 0, 1, 0, 0 },
-            { 1, 0, 0, 0, 0, 1, 0, 0, 0, 1 },
-            { 1, 0, 1, 1, 1, 1, 0, 1, 1, 1 },
-            { 1, 1, 1, 0, 0, 0, 1, 0, 0, 1 } };*/
-
-    // Source is the left-most bottom-most corner
-    Pair src = make_pair(59, 10);
-
-    // Destination is the left-most top-most corner
-    Pair dest = make_pair(7, 48);
-
-    A_STAR aStar;
-
-    aStar.aStarSearch(simplifiedGraph, src, dest);
-
-    return (0);
 }
 
 // All lights managed here
