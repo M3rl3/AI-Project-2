@@ -5,7 +5,10 @@
 #include <iostream>
 #include <utility>
 #include <stack>
+#include <vector>
 #include <set>
+
+#include <glm/vec2.hpp>
 
 using namespace std;
 
@@ -54,4 +57,9 @@ public:
 	// a given source cell to a destination cell according
 	// to A* Search Algorithm
 	void aStarSearch(int grid[][COL], Pair src, Pair dest);
+
+	vector<glm::vec2>& GetPath();
+
+private:
+	vector<glm::vec2> path;
 };

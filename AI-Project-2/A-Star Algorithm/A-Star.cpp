@@ -63,6 +63,9 @@ void A_STAR::tracePath(cell cellDetails[][COL], Pair dest)
 	while (!Path.empty()) {
 		pair<int, int> p = Path.top();
 		Path.pop();
+
+		path.push_back(glm::vec2(p.first, p.second));
+
 		printf("-> (%d,%d) ", p.first, p.second);
 	}
 
@@ -582,10 +585,18 @@ void A_STAR::aStarSearch(int grid[][COL], Pair src, Pair dest)
 	// When the destination cell is not found and the open
 	// list is empty, then we conclude that we failed to
 	// reach the destination cell. This may happen when the
-	// there is no way to destination cell (due to
-	// blockages)
+	// there is no way to destination cell (due to blockages)
 	if (foundDest == false)
 		printf("Failed to find the Destination Cell\n");
 
+	//// When the destination cell is found, "return" a  copy 
+	//// of the path that was discovered by the search algorithm
+	//if (foundDest == true)
+	//	thePath = path;
+
 	return;
+}
+
+vector<glm::vec2>& A_STAR::GetPath() {
+	return path;
 }

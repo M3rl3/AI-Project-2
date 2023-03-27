@@ -43,6 +43,7 @@ cMeshInfo* full_screen_quad;
 cMeshInfo* skybox_sphere_mesh;
 cMeshInfo* player_mesh;
 cMeshInfo* cube;
+cMeshInfo* agent;
 
 cMeshInfo* bulb_mesh;
 cLight* pointLight;
@@ -50,6 +51,7 @@ cLight* pointLight;
 unsigned int readIndex = 0;
 int object_index = 0;
 int elapsed_frames = 0;
+int index = 0;
 
 bool enableMouse = false;
 bool useFBO = false;
@@ -85,7 +87,9 @@ glm::vec3 direction(0.f);
 glm::vec4 constLightAtten = glm::vec4(1.0f);
 
 std::vector<std::vector<glm::vec3>> graph;
+std::vector<std::vector<glm::vec3>> positions(64, std::vector<glm::vec3>(64));
 std::vector<cMeshInfo*> cubes;
+std::vector<glm::vec2> path;
 
 int simplifiedGraph[64][64];
 
@@ -600,14 +604,14 @@ void Render() {
     moon_mesh->doNotLight = true;
     meshArray.push_back(moon_mesh);
 
-    cMeshInfo* pyramid = new cMeshInfo();
-    pyramid->meshName = "pyramid";
-    pyramid->friendlyName = "pyramid";
-    pyramid->doNotLight = false;
-    pyramid->isVisible = true;
-    pyramid->useRGBAColour = true;
-    pyramid->RGBAColour = glm::vec4(50, 30, 0, 1);
-    meshArray.push_back(pyramid);
+    agent = new cMeshInfo();
+    agent->meshName = "pyramid";
+    agent->friendlyName = "agent";
+    agent->doNotLight = false;
+    agent->isVisible = true;
+    agent->useRGBAColour = true;
+    agent->RGBAColour = glm::vec4(50, 30, 0, 1);
+    meshArray.push_back(agent);
 
     skybox_sphere_mesh = new cMeshInfo();
     skybox_sphere_mesh->meshName = "skybox_sphere";
@@ -647,7 +651,18 @@ void Render() {
         }
     }
 
-    A_STAR_DRIVER();
+    // Source
+    Pair src = make_pair(59, 10);
+
+    // Destination
+    Pair dest = make_pair(7, 48);
+
+    A_STAR aStar;
+
+    aStar.aStarSearch(simplifiedGraph, src, dest);
+
+    path = aStar.GetPath();
+
     std::cout << std::endl;
 
     int breakPoint = 0;
@@ -717,10 +732,27 @@ void Update() {
             camera->target = player_mesh->position;
         }
     }
+    
+    elapsed_frames++;
 
     for (int i = 0; i < meshArray.size(); i++) {
 
         cMeshInfo* currentMesh = meshArray[i];
+
+        if (currentMesh->friendlyName == "agent") {
+
+            currentMesh->position = positions[(int)path[index].x][(int)path[index].y];
+
+            if (elapsed_frames > 50) {
+                if (index == path.size() - 1) {
+                    index = path.size() - 1;
+                }
+                else {
+                    index++;
+                }
+                elapsed_frames = 0;
+            }
+        }
          
         // Draw all the meshes pushed onto the vector
         DrawMesh(currentMesh,           // theMesh
@@ -908,6 +940,7 @@ void GenerateCubes(glm::vec3& startPos, float tileSize, std::vector<cMeshInfo*>&
 
     for (int i = 0; i < graph.size(); i++) {
         for (int j = 0; j < graph[i].size(); j++) {
+            positions[i][j] = startPos;
 
             if (graph[i][j] == glm::vec3(0, 0, 0)) {
 
@@ -961,6 +994,7 @@ void GenerateCubes(glm::vec3& startPos, float tileSize, std::vector<cMeshInfo*>&
         startPos.x = temp.x;
         startPos.z += tileSize;
     }
+    int breakPoint = 0;
 }
 
 // Driver program to A-Star search algorithm
