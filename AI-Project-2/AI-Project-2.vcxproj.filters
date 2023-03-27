@@ -122,6 +122,9 @@
     <ClInclude Include="PlyFileLoader\PlyFileLoader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="AI_Path_Finding\PathFinding.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="File Stream\readFile.txt" />

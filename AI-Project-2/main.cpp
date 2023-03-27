@@ -42,6 +42,7 @@ sModelDrawInfo player_obj;
 cMeshInfo* full_screen_quad;
 cMeshInfo* skybox_sphere_mesh;
 cMeshInfo* player_mesh;
+cMeshInfo* cube;
 
 cMeshInfo* bulb_mesh;
 cLight* pointLight;
@@ -64,7 +65,8 @@ float RandomFloat(float a, float b);
 bool RandomizePositions(cMeshInfo* mesh);
 void LoadPlyFilesIntoVAO(void);
 int A_STAR_DRIVER();
-bool BitmapStream(std::string filePath);
+bool BitmapStream(std::string filePath, std::vector<std::vector<glm::vec3>>& v);
+void GenerateCubes(glm::vec3& startPos, std::vector<cMeshInfo*>& blocks);
 void RenderToFBO(GLFWwindow* window, sCamera* camera, glm::mat4& view, glm::mat4& projection,
     GLuint eyeLocationLocation, GLuint viewLocation, GLuint projectionLocation,
     GLuint modelLocaction, GLuint modelInverseLocation);
@@ -75,10 +77,15 @@ const glm::vec3 origin = glm::vec3(0);
 const glm::mat4 matIdentity = glm::mat4(1.0f);
 const glm::vec3 upVector = glm::vec3(0.f, 1.f, 0.f);
 
+glm::vec3 wallPos = glm::vec3(0);
+
 glm::vec3 direction(0.f);
 
 // attenuation on all lights
 glm::vec4 constLightAtten = glm::vec4(1.0f);
+
+std::vector<std::vector<glm::vec3>> graph;
+std::vector<cMeshInfo*> cubes;
 
 enum eEditMode
 {
@@ -530,7 +537,7 @@ void Render() {
     ambientLight = 0.75f;
     LightMan->SetAmbientLightAmount(ambientLight);
 
-    constLightAtten = glm::vec4(0.1f, 2.5e-5f, 2.5e-5f, 1.0f);
+    constLightAtten = glm::vec4(0.1f, 2.5e-5f, 2.5e-7f, 1.0f);
 
     // The actual light
     pointLight = LightMan->AddLight(glm::vec4(0.f, 0.f, 0.f, 1.f));
@@ -563,8 +570,8 @@ void Render() {
     flat_plain->meshName = "flat_plain";
     flat_plain->friendlyName = "flat_plain";
     flat_plain->RGBAColour = terrainColor;
-    flat_plain->useRGBAColour = false;
-    flat_plain->hasTexture = true;
+    flat_plain->useRGBAColour = true;
+    flat_plain->hasTexture = false;
     flat_plain->textures[0] = "traversal_graph.bmp";
     flat_plain->textureRatios[0] = 1.f;
     flat_plain->doNotLight = false;
@@ -602,13 +609,6 @@ void Render() {
     quad_mesh->textureRatios[0] = 1.f;
     meshArray.push_back(quad_mesh);
 
-    cMeshInfo* cube = new cMeshInfo();
-    cube->meshName = "wall_cube";
-    cube->friendlyName = "wall_cube";
-    cube->useRGBAColour = true;
-    cube->RGBAColour = glm::vec4(0.f, 0.f, 255.f, 1.f);
-    meshArray.push_back(cube);
-
     skybox_sphere_mesh = new cMeshInfo();
     skybox_sphere_mesh->meshName = "skybox_sphere";
     skybox_sphere_mesh->friendlyName = "skybox_sphere";
@@ -625,9 +625,13 @@ void Render() {
     // reads scene descripion files for positioning and other info
     ReadSceneDescription(meshArray);
 
-    if (!BitmapStream("../assets/textures/traversal_graph.bmp")) {
+    if (!BitmapStream("../assets/textures/traversal_graph.bmp", graph)) {
         std::cout << "Could not open BMP file." << std::endl;
     }
+
+    wallPos = glm::vec3(-2500.0, 0.0, -2000.0);
+
+    GenerateCubes(wallPos, cubes);
 }
 
 void Update() {
@@ -698,6 +702,22 @@ void Update() {
     for (int i = 0; i < meshArray.size(); i++) {
 
         cMeshInfo* currentMesh = meshArray[i];
+         
+        // Draw all the meshes pushed onto the vector
+        DrawMesh(currentMesh,           // theMesh
+                 model,                 // Model Matrix
+                 shaderID,              // Compiled Shader ID
+                 TextureMan,            // Instance of the Texture Manager
+                 VAOMan,                // Instance of the VAO Manager
+                 camera,                // Instance of the struct Camera
+                 modelLocaction,        // UL for model matrix
+                 modelInverseLocation); // UL for transpose of model matrix
+        
+    }
+    
+    for (int i = 0; i < cubes.size(); i++) {
+
+        cMeshInfo* currentMesh = cubes[i];
          
         // Draw all the meshes pushed onto the vector
         DrawMesh(currentMesh,           // theMesh
@@ -814,7 +834,7 @@ struct Color {
     unsigned char b;
 };
 
-bool BitmapStream(std::string filePath) {
+bool BitmapStream(std::string filePath, std::vector<std::vector<glm::vec3>>& v) {
 
     std::ifstream bmpStream;
     bmpStream.open(filePath);
@@ -831,28 +851,97 @@ bool BitmapStream(std::string filePath) {
 
     printf("\n");
 
+    // Assumes the size of the image is 64x64
+    std::vector<glm::vec3> localgraph(4096);
+
     Color color;
     for (int i = 0; i < 4096; i++) {
         bmpStream.read((char*)&color, 3);
 
-        if (color.r == 36 && color.g == 28 && color.b == 237) {
-            printf("Goal!\n");
-        }
-        if (color.r == 76 && color.g == 177 && color.b == 34) {
-            printf("Start!\n");
-        }
-        if (color.r == 0 && color.b == 0 && color.g == 0) {
-            printf("Wall!\n");
-        }
-        if (color.r == 255 && color.g == 255 && color.b == 255) {
-
-        }
-
-        //printf("%d %d %d\n", color.r, color.g, color.b);
+        localgraph[i].r = (int)color.r;
+        localgraph[i].g = (int)color.g;
+        localgraph[i].b = (int)color.b;
     }
+
+    // Initialize a 2D vector of size 64x64
+    std::vector<std::vector<glm::vec3>> v2(64, std::vector<glm::vec3>(64)); 
+
+    // Copy over the 1D vector into the 2D vector
+    for (int i = 0; i < 64; i++) {
+        for (int j = 0; j < 64; j++) {
+            v2[i][j] = localgraph[i * 64 + j];
+        }
+    }
+
+    v = v2;
+
+    int breakpoint = 0;
 
     bmpStream.close();
     return true;
+}
+
+void GenerateCubes(glm::vec3& startPos, std::vector<cMeshInfo*>& blocks) {
+
+    glm::vec3 temp = startPos;
+
+    startPos.y += 40.f;
+
+    for (int i = 0; i < graph.size(); i++) {
+        for (int j = 0; j < graph[i].size(); j++) {
+
+            if (graph[i][j] == glm::vec3(0, 0, 0)) {
+
+                cube = new cMeshInfo();
+                cube->meshName = "wall_cube";
+                cube->friendlyName = "wall_cube";
+                cube->useRGBAColour = true;
+                cube->RGBAColour = glm::vec4(0.f, 0.f, 0.f, 1.f);
+                cube->SetUniformScale(75.f);
+                cube->SetRotationFromEuler(origin);
+
+                cube->position = startPos;
+                blocks.push_back(cube);
+
+                startPos.x += 75.f;
+            }
+            else if (graph[i][j] == glm::vec3(36, 28, 237)) {
+
+                cube = new cMeshInfo();
+                cube->meshName = "wall_cube";
+                cube->friendlyName = "wall_cube";
+                cube->useRGBAColour = true;
+                cube->RGBAColour = glm::vec4(10, 0, 0, 1.f);
+                cube->SetUniformScale(75.f);
+                cube->SetRotationFromEuler(origin);
+
+                cube->position = startPos;
+                blocks.push_back(cube);
+
+                startPos.x += 75.f;
+            }
+            else if (graph[i][j] == glm::vec3(76, 177, 34)) {
+
+                cube = new cMeshInfo();
+                cube->meshName = "wall_cube";
+                cube->friendlyName = "wall_cube";
+                cube->useRGBAColour = true;
+                cube->RGBAColour = glm::vec4(0, 10, 0, 1.f);
+                cube->SetUniformScale(75.f);
+                cube->SetRotationFromEuler(origin);
+
+                cube->position = startPos;
+                blocks.push_back(cube);
+
+                startPos.x += 75.f;
+            }
+            else {
+                startPos.x += 75.f;
+            }
+        }
+        startPos.x = temp.x;
+        startPos.z += 75.f;
+    }
 }
 
 // Driver program to A-Star search algorithm

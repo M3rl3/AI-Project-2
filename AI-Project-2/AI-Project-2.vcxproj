@@ -167,6 +167,7 @@
     <ClCompile Include="PlyFileLoader\PlyFileLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AI_Path_Finding\PathFinding.h" />
     <ClInclude Include="cBasicTextureManager\C24BitBMPpixel.h" />
     <ClInclude Include="cBasicTextureManager\cBasicTextureManager.h" />
     <ClInclude Include="cBasicTextureManager\CTextureFromBMP.h" />

@@ -1,7 +1,7 @@
-7
+6
 
 bulb
-position -55.0 200.0 -315.0
+position -55.0 2000.0 -315.0
 rotation 0.0 0.0 0.0
 scale 0.1 0.1 0.1
 
@@ -13,7 +13,7 @@ scale 2.0 2.0 2.0
 flat_plain
 position 0.0 0.0 0.0
 rotation 0.0 0.0 0.0
-scale 0.25 0.25 0.25
+scale 1.0 1.0 1.0
 
 player
 position -85.0 12.0 -320.0
@@ -21,16 +21,11 @@ rotation 0.0 0.0 0.0
 scale 1.0 1.0 1.0
 
 moon
-position -180.0 370.0 400.0
+position -1800.0 1000.0 400.0
 rotation 0.0 0.0 0.0
-scale 50.0 50.0 50.0
+scale 100.0 100.0 100.0
 
 quad_mesh
 position -180.0 12.0 -150.0
 rotation 0.0 0.0 0.0
 scale -25.0 25.0 25.0
-
-cube_mesh
-position 0.0 40.0 0.0
-rotation 0.0 0.0 0.0
-scale 75.0 75.0 75.0
