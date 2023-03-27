@@ -3,7 +3,7 @@
 #include "cMeshInfo/cMeshInfo.h"
 #include "Draw Mesh/DrawMesh.h"
 #include "Draw Bounding Box/DrawBoundingBox.h"
-//#include "A-Star Algorithm/A-Star.h"
+#include "A-Star Algorithm/A-Star.h"
 
 #include <glm/glm.hpp>
 #include <glm/vec4.hpp>
@@ -945,32 +945,32 @@ void GenerateCubes(glm::vec3& startPos, std::vector<cMeshInfo*>& blocks) {
 }
 
 // Driver program to A-Star search algorithm
-//int A_STAR_DRIVER() {
-//
-//    /* Description of the Grid-
-//    1--> The cell is not blocked
-//    0--> The cell is blocked */
-//    int grid[ROW][COL]
-//        = { { 1, 0, 1, 1, 1, 1, 0, 1, 1, 1 },
-//            { 1, 1, 1, 0, 1, 1, 1, 0, 1, 1 },
-//            { 1, 1, 1, 0, 1, 1, 0, 1, 0, 1 },
-//            { 0, 0, 1, 0, 1, 0, 0, 0, 0, 1 },
-//            { 1, 1, 1, 0, 1, 1, 1, 0, 1, 0 },
-//            { 1, 0, 1, 1, 1, 1, 0, 1, 0, 0 },
-//            { 1, 0, 0, 0, 0, 1, 0, 0, 0, 1 },
-//            { 1, 0, 1, 1, 1, 1, 0, 1, 1, 1 },
-//            { 1, 1, 1, 0, 0, 0, 1, 0, 0, 1 } };
-//
-//    // Source is the left-most bottom-most corner
-//    Pair src = make_pair(8, 0);
-//
-//    // Destination is the left-most top-most corner
-//    Pair dest = make_pair(0, 0);
-//
-//    aStarSearch(grid, src, dest);
-//
-//    return (0);
-//}
+int A_STAR_DRIVER() {
+
+    /* Description of the Grid-
+    1--> The cell is not blocked
+    0--> The cell is blocked */
+    int grid[ROW][COL]
+        = { { 1, 0, 1, 1, 1, 1, 0, 1, 1, 1 },
+            { 1, 1, 1, 0, 1, 1, 1, 0, 1, 1 },
+            { 1, 1, 1, 0, 1, 1, 0, 1, 0, 1 },
+            { 0, 0, 1, 0, 1, 0, 0, 0, 0, 1 },
+            { 1, 1, 1, 0, 1, 1, 1, 0, 1, 0 },
+            { 1, 0, 1, 1, 1, 1, 0, 1, 0, 0 },
+            { 1, 0, 0, 0, 0, 1, 0, 0, 0, 1 },
+            { 1, 0, 1, 1, 1, 1, 0, 1, 1, 1 },
+            { 1, 1, 1, 0, 0, 0, 1, 0, 0, 1 } };
+
+    // Source is the left-most bottom-most corner
+    Pair src = make_pair(8, 0);
+
+    // Destination is the left-most top-most corner
+    Pair dest = make_pair(0, 0);
+
+    aStarSearch(grid, src, dest);
+
+    return (0);
+}
 
 // All lights managed here
 void ManageLights() {

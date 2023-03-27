@@ -147,6 +147,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="A-Star Algorithm\A-Star.cpp" />
     <ClCompile Include="A-Star Algorithm\A-Star.h" />
     <ClCompile Include="cBasicTextureManager\C24BitBMPpixel.cpp" />
     <ClCompile Include="cBasicTextureManager\cBasicTextureManager.cpp" />
