@@ -545,7 +545,7 @@ void Render() {
     // reads scene descripion files for positioning and other info
     ReadSceneDescription(meshArray);
 
-    if (!BitmapStream("../assets/textures/traversal_graph.bmp", graph)) {
+    if (!BitmapStream("../assets/textures/ex_traversal_graph.bmp", graph)) {
         std::cout << "Could not open BMP file." << std::endl;
     }
 
@@ -671,7 +671,7 @@ void Update() {
             currentMesh->position = positions[(int)path[index].x][(int)path[index].y];
 
             // Move to the next position after x amount of frames
-            if (elapsed_frames > 50) {
+            if (elapsed_frames > 10) {
                 if (index == path.size() - 1) {
                     index = path.size() - 1;
                 }
