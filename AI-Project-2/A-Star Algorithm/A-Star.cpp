@@ -166,23 +166,24 @@ void A_STAR::aStarSearch(int grid[][COL], Pair src, Pair dest)
 		/*
 		Generating all the 8 successor of this cell
 
-			N.W N N.E
-			\ | /
+			  N.W N N.E
+			   \  |  /
 				\ | /
 			W----Cell----E
 				/ | \
-				/ | \
-			S.W S S.E
+			   /  |  \
+			  S.W S S.E
 
-		Cell-->Popped Cell (i, j)
+		Cell--> Popped Cell (i, j)
 		N --> North	 (i-1, j)
 		S --> South	 (i+1, j)
 		E --> East	 (i, j+1)
-		W --> West		 (i, j-1)
+		W --> West	 (i, j-1)
 		N.E--> North-East (i-1, j+1)
 		N.W--> North-West (i-1, j-1)
 		S.E--> South-East (i+1, j+1)
-		S.W--> South-West (i+1, j-1)*/
+		S.W--> South-West (i+1, j-1)
+		*/
 
 		// To store the 'g', 'h' and 'f' of the 8 successors
 		double gNew, hNew, fNew;
@@ -401,8 +402,9 @@ void A_STAR::aStarSearch(int grid[][COL], Pair src, Pair dest)
 			// list or if it is blocked, then ignore it.
 			// Else do the following
 			else if (closedList[i - 1][j + 1] == false
-				&& isUnBlocked(grid, i - 1, j + 1)
-				== true) {
+				&& isUnBlocked(grid, i - 1, j + 1) == true 
+				&& isUnBlocked(grid, i, j + 1) == true
+				&& isUnBlocked(grid, i - 1, j) == true) {
 				gNew = cellDetails[i][j].g + 1.414;
 				hNew = calculateHValue(i - 1, j + 1, dest);
 				fNew = gNew + hNew;
@@ -451,8 +453,9 @@ void A_STAR::aStarSearch(int grid[][COL], Pair src, Pair dest)
 			// list or if it is blocked, then ignore it.
 			// Else do the following
 			else if (closedList[i - 1][j - 1] == false
-				&& isUnBlocked(grid, i - 1, j - 1)
-				== true) {
+				&& isUnBlocked(grid, i - 1, j - 1) == true
+				&& isUnBlocked(grid, i, j - 1) == true
+				&& isUnBlocked(grid, i - 1, j) == true) {
 				gNew = cellDetails[i][j].g + 1.414;
 				hNew = calculateHValue(i - 1, j - 1, dest);
 				fNew = gNew + hNew;
@@ -500,8 +503,9 @@ void A_STAR::aStarSearch(int grid[][COL], Pair src, Pair dest)
 			// list or if it is blocked, then ignore it.
 			// Else do the following
 			else if (closedList[i + 1][j + 1] == false
-				&& isUnBlocked(grid, i + 1, j + 1)
-				== true) {
+				&& isUnBlocked(grid, i + 1, j + 1) == true
+				&& isUnBlocked(grid, i, j + 1) == true
+				&& isUnBlocked(grid, i + 1, j) == true) {
 				gNew = cellDetails[i][j].g + 1.414;
 				hNew = calculateHValue(i + 1, j + 1, dest);
 				fNew = gNew + hNew;
@@ -550,8 +554,9 @@ void A_STAR::aStarSearch(int grid[][COL], Pair src, Pair dest)
 			// list or if it is blocked, then ignore it.
 			// Else do the following
 			else if (closedList[i + 1][j - 1] == false
-				&& isUnBlocked(grid, i + 1, j - 1) == true)
-			{
+				&& isUnBlocked(grid, i + 1, j - 1) == true
+				&& isUnBlocked(grid, i, j - 1) == true
+				&& isUnBlocked(grid, i + 1, j) == true) {
 				gNew = cellDetails[i][j].g + 1.414;
 				hNew = calculateHValue(i + 1, j - 1, dest);
 				fNew = gNew + hNew;
