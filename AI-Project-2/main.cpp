@@ -366,10 +366,10 @@ void Initialize() {
     glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
 
     // windowed mode
-    // window = glfwCreateWindow(1366, 768, "Man", NULL, NULL);
+    window = glfwCreateWindow(1366, 768, "Man", NULL, NULL);
 
     // fullscreen support based on current monitor
-    window = glfwCreateWindow(mode->width, mode->height, "Man", currentMonitor, NULL);
+    // window = glfwCreateWindow(mode->width, mode->height, "Man", currentMonitor, NULL);
     
     if (!window) {
         std::cerr << "Window creation failed." << std::endl;
