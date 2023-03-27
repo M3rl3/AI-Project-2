@@ -66,7 +66,7 @@ bool RandomizePositions(cMeshInfo* mesh);
 void LoadPlyFilesIntoVAO(void);
 int A_STAR_DRIVER();
 bool BitmapStream(std::string filePath, std::vector<std::vector<glm::vec3>>& v);
-void GenerateCubes(glm::vec3& startPos, std::vector<cMeshInfo*>& blocks);
+void GenerateCubes(glm::vec3& startPos, float tileSize, std::vector<cMeshInfo*>& blocks);
 void RenderToFBO(GLFWwindow* window, sCamera* camera, glm::mat4& view, glm::mat4& projection,
     GLuint eyeLocationLocation, GLuint viewLocation, GLuint projectionLocation,
     GLuint modelLocaction, GLuint modelInverseLocation);
@@ -86,6 +86,8 @@ glm::vec4 constLightAtten = glm::vec4(1.0f);
 
 std::vector<std::vector<glm::vec3>> graph;
 std::vector<cMeshInfo*> cubes;
+
+int simplifiedGraph[64][64];
 
 enum eEditMode
 {
@@ -598,16 +600,14 @@ void Render() {
     moon_mesh->doNotLight = true;
     meshArray.push_back(moon_mesh);
 
-    cMeshInfo* quad_mesh = new cMeshInfo();
-    quad_mesh->meshName = "fullScreenQuad";
-    quad_mesh->friendlyName = "quad";
-    quad_mesh->doNotLight = false;
-    quad_mesh->isVisible = false;
-    quad_mesh->hasTexture = true;
-    quad_mesh->textures[0] = "traversal_graph.bmp";
-    quad_mesh->textureIDs[0] = FrameBuffer->colourTexture_0_ID;
-    quad_mesh->textureRatios[0] = 1.f;
-    meshArray.push_back(quad_mesh);
+    cMeshInfo* pyramid = new cMeshInfo();
+    pyramid->meshName = "pyramid";
+    pyramid->friendlyName = "pyramid";
+    pyramid->doNotLight = false;
+    pyramid->isVisible = true;
+    pyramid->useRGBAColour = true;
+    pyramid->RGBAColour = glm::vec4(50, 30, 0, 1);
+    meshArray.push_back(pyramid);
 
     skybox_sphere_mesh = new cMeshInfo();
     skybox_sphere_mesh->meshName = "skybox_sphere";
@@ -631,7 +631,26 @@ void Render() {
 
     wallPos = glm::vec3(-2500.0, 0.0, -2000.0);
 
-    GenerateCubes(wallPos, cubes);
+    GenerateCubes(wallPos, 75.f, cubes);
+
+    for (int i = 0; i < graph.size(); i++) {
+        for (int j = 0; j < graph[i].size(); j++) {
+            if (graph[i][j] == glm::vec3(0.f)) {
+                simplifiedGraph[i][j] = 0;
+            }
+            else if (graph[i][j] == glm::vec3(255.f)) {
+                simplifiedGraph[i][j] = 1;
+            }
+            else {
+                simplifiedGraph[i][j] = 1;
+            }
+        }
+    }
+
+    A_STAR_DRIVER();
+    std::cout << std::endl;
+
+    int breakPoint = 0;
 }
 
 void Update() {
@@ -864,16 +883,16 @@ bool BitmapStream(std::string filePath, std::vector<std::vector<glm::vec3>>& v) 
     }
 
     // Initialize a 2D vector of size 64x64
-    std::vector<std::vector<glm::vec3>> v2(64, std::vector<glm::vec3>(64)); 
+    std::vector<std::vector<glm::vec3>> v1(64, std::vector<glm::vec3>(64)); 
 
     // Copy over the 1D vector into the 2D vector
     for (int i = 0; i < 64; i++) {
         for (int j = 0; j < 64; j++) {
-            v2[i][j] = localgraph[i * 64 + j];
+            v1[i][j] = localgraph[i * 64 + j];
         }
     }
 
-    v = v2;
+    v = v1;
 
     int breakpoint = 0;
 
@@ -881,7 +900,7 @@ bool BitmapStream(std::string filePath, std::vector<std::vector<glm::vec3>>& v) 
     return true;
 }
 
-void GenerateCubes(glm::vec3& startPos, std::vector<cMeshInfo*>& blocks) {
+void GenerateCubes(glm::vec3& startPos, float tileSize, std::vector<cMeshInfo*>& blocks) {
 
     glm::vec3 temp = startPos;
 
@@ -897,13 +916,13 @@ void GenerateCubes(glm::vec3& startPos, std::vector<cMeshInfo*>& blocks) {
                 cube->friendlyName = "wall_cube";
                 cube->useRGBAColour = true;
                 cube->RGBAColour = glm::vec4(0.f, 0.f, 0.f, 1.f);
-                cube->SetUniformScale(75.f);
+                cube->SetUniformScale(tileSize);
                 cube->SetRotationFromEuler(origin);
 
                 cube->position = startPos;
                 blocks.push_back(cube);
 
-                startPos.x += 75.f;
+                startPos.x += tileSize;
             }
             else if (graph[i][j] == glm::vec3(36, 28, 237)) {
 
@@ -912,7 +931,7 @@ void GenerateCubes(glm::vec3& startPos, std::vector<cMeshInfo*>& blocks) {
                 cube->friendlyName = "wall_cube";
                 cube->useRGBAColour = true;
                 cube->RGBAColour = glm::vec4(10, 0, 0, 1.f);
-                cube->SetUniformScale(75.f);
+                cube->SetUniformScale(tileSize);
                 cube->SetRotationFromEuler(origin);
 
                 cube->position = startPos;
@@ -927,20 +946,20 @@ void GenerateCubes(glm::vec3& startPos, std::vector<cMeshInfo*>& blocks) {
                 cube->friendlyName = "wall_cube";
                 cube->useRGBAColour = true;
                 cube->RGBAColour = glm::vec4(0, 10, 0, 1.f);
-                cube->SetUniformScale(75.f);
+                cube->SetUniformScale(tileSize);
                 cube->SetRotationFromEuler(origin);
 
                 cube->position = startPos;
                 blocks.push_back(cube);
 
-                startPos.x += 75.f;
+                startPos.x += tileSize;
             }
             else {
-                startPos.x += 75.f;
+                startPos.x += tileSize;
             }
         }
         startPos.x = temp.x;
-        startPos.z += 75.f;
+        startPos.z += tileSize;
     }
 }
 
@@ -950,7 +969,7 @@ int A_STAR_DRIVER() {
     /* Description of the Grid-
     1--> The cell is not blocked
     0--> The cell is blocked */
-    int grid[ROW][COL]
+    /*int grid[ROW][COL]
         = { { 1, 0, 1, 1, 1, 1, 0, 1, 1, 1 },
             { 1, 1, 1, 0, 1, 1, 1, 0, 1, 1 },
             { 1, 1, 1, 0, 1, 1, 0, 1, 0, 1 },
@@ -959,15 +978,17 @@ int A_STAR_DRIVER() {
             { 1, 0, 1, 1, 1, 1, 0, 1, 0, 0 },
             { 1, 0, 0, 0, 0, 1, 0, 0, 0, 1 },
             { 1, 0, 1, 1, 1, 1, 0, 1, 1, 1 },
-            { 1, 1, 1, 0, 0, 0, 1, 0, 0, 1 } };
+            { 1, 1, 1, 0, 0, 0, 1, 0, 0, 1 } };*/
 
     // Source is the left-most bottom-most corner
-    Pair src = make_pair(8, 0);
+    Pair src = make_pair(59, 10);
 
     // Destination is the left-most top-most corner
-    Pair dest = make_pair(0, 0);
+    Pair dest = make_pair(7, 48);
 
-    aStarSearch(grid, src, dest);
+    A_STAR aStar;
+
+    aStar.aStarSearch(simplifiedGraph, src, dest);
 
     return (0);
 }
@@ -1257,6 +1278,12 @@ void LoadPlyFilesIntoVAO(void)
         std::cerr << "Could not load model into VAO" << std::endl;
     }
     
+    sModelDrawInfo pyramid;
+    plyLoader->LoadModel(meshFiles[11], pyramid);
+    if (!VAOMan->LoadModelIntoVAO("pyramid", pyramid, shaderID)) {
+        std::cerr << "Could not load model into VAO" << std::endl;
+    }
+    
     // 2-sided full screen quad aligned to x-y axis
     sModelDrawInfo fullScreenQuad;
     plyLoader->LoadModel(meshFiles[10], fullScreenQuad);
@@ -1272,16 +1299,16 @@ void LoadPlyFilesIntoVAO(void)
     }
 }
 
-int main(int argc, char** argv) {
-
+int main(int argc, char** argv) 
+{
     Initialize();
     Render();
-
+    
     while (!glfwWindowShouldClose(window)) {
         Update();
     }
-
+    
     Shutdown();
-
+    
     return 0;
 }

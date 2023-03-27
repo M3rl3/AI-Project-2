@@ -2,7 +2,7 @@
 
 // A Utility Function to check whether given cell (row, col)
 // is a valid cell or not.
-bool isValid(int row, int col)
+bool A_STAR::isValid(int row, int col)
 {
 	// Returns true if row number and column number
 	// is in range
@@ -12,7 +12,7 @@ bool isValid(int row, int col)
 
 // A Utility Function to check whether the given cell is
 // blocked or not
-bool isUnBlocked(int grid[][COL], int row, int col)
+bool A_STAR::isUnBlocked(int grid[][COL], int row, int col)
 {
 	// Returns true if the cell is not blocked else false
 	if (grid[row][col] == 1)
@@ -23,7 +23,7 @@ bool isUnBlocked(int grid[][COL], int row, int col)
 
 // A Utility Function to check whether destination cell has
 // been reached or not
-bool isDestination(int row, int col, Pair dest)
+bool A_STAR::isDestination(int row, int col, Pair dest)
 {
 	if (row == dest.first && col == dest.second)
 		return (true);
@@ -32,7 +32,7 @@ bool isDestination(int row, int col, Pair dest)
 }
 
 // A Utility Function to calculate the 'h' heuristics.
-double calculateHValue(int row, int col, Pair dest)
+double A_STAR::calculateHValue(int row, int col, Pair dest)
 {
 	// Return using the distance formula
 	return ((double)sqrt(
@@ -42,7 +42,7 @@ double calculateHValue(int row, int col, Pair dest)
 
 // A Utility Function to trace the path from the source
 // to destination
-void tracePath(cell cellDetails[][COL], Pair dest)
+void A_STAR::tracePath(cell cellDetails[][COL], Pair dest)
 {
 	printf("\nThe Path is ");
 	int row = dest.first;
@@ -72,7 +72,7 @@ void tracePath(cell cellDetails[][COL], Pair dest)
 // A Function to find the shortest path between
 // a given source cell to a destination cell according
 // to A* Search Algorithm
-void aStarSearch(int grid[][COL], Pair src, Pair dest)
+void A_STAR::aStarSearch(int grid[][COL], Pair src, Pair dest)
 {
 	// If the source is out of range
 	if (isValid(src.first, src.second) == false) {

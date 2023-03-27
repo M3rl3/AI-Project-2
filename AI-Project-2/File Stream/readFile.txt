@@ -9,3 +9,4 @@
 ../assets/meshes/steve.ply
 ../assets/meshes/plane_rescaled.ply
 ../assets/meshes/quad.ply
+../assets/meshes/pyramid.ply
