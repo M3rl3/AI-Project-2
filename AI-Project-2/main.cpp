@@ -479,7 +479,7 @@ void Render() {
     ambientLight = 0.75f;
     LightMan->SetAmbientLightAmount(ambientLight);
 
-    constLightAtten = glm::vec4(0.1f, 2.5e-5f, 2.5e-7f, 1.0f);
+    constLightAtten = glm::vec4(0.1f, 2.5e-5f, 2.5e-8f, 1.0f);
 
     // The actual light
     pointLight = LightMan->AddLight(glm::vec4(0.f, 0.f, 0.f, 1.f));
@@ -520,26 +520,6 @@ void Render() {
     flat_plain->isVisible = true;
     meshArray.push_back(flat_plain);
 
-    player_mesh = new cMeshInfo();
-    player_mesh->meshName = "player";
-    player_mesh->friendlyName = "player";
-    player_mesh->hasTexture = true;
-    player_mesh->RGBAColour = glm::vec4(40.f, 0.f, 40.f, 1.f);
-    player_mesh->useRGBAColour = false;
-    player_mesh->doNotLight = true;
-    player_mesh->textures[0] = "man.bmp";
-    player_mesh->textureRatios[0] = 1.f;
-    meshArray.push_back(player_mesh);
-
-    cMeshInfo* moon_mesh = new cMeshInfo();
-    moon_mesh->meshName = "moon";
-    moon_mesh->friendlyName = "moon";
-    moon_mesh->hasTexture = true;
-    moon_mesh->textures[0] = "jupiter_texture.bmp";
-    moon_mesh->textureRatios[0] = 1.0f;
-    moon_mesh->doNotLight = true;
-    meshArray.push_back(moon_mesh);
-
     agent = new cMeshInfo();
     agent->meshName = "pyramid";
     agent->friendlyName = "agent";
@@ -573,6 +553,9 @@ void Render() {
 
     GenerateCubes(wallPos, 75.f, cubes);
 
+    glm::vec2 startPos;
+    glm::vec2 goalPos;
+
     for (int i = 0; i < graph.size(); i++) {
         for (int j = 0; j < graph[i].size(); j++) {
             if (graph[i][j] == glm::vec3(0.f)) {
@@ -581,17 +564,26 @@ void Render() {
             else if (graph[i][j] == glm::vec3(255.f)) {
                 simplifiedGraph[i][j] = 1;
             }
-            else {
+            else if (graph[i][j] == glm::vec3(76, 177, 34)) {
+                startPos.x = i;
+                startPos.y = j;
+
+                simplifiedGraph[i][j] = 1;
+            }
+            else if (graph[i][j] == glm::vec3(36, 28, 237)) {
+                goalPos.x = i;
+                goalPos.y = j;
+
                 simplifiedGraph[i][j] = 1;
             }
         }
     }
 
     // Source
-    Pair src = make_pair(59, 10);
+    Pair src = make_pair(startPos.x, startPos.y);
 
     // Destination
-    Pair dest = make_pair(7, 48);
+    Pair dest = make_pair(goalPos.x, goalPos.y);
 
     // Object
     A_STAR aStar;
@@ -675,7 +667,7 @@ void Update() {
         // Check if the current object is the agent
         if (currentMesh->friendlyName == "agent") {
 
-            // Assign Position
+            // Assign position according to the path found by the A* algorithm
             currentMesh->position = positions[(int)path[index].x][(int)path[index].y];
 
             // Move to the next position after x amount of frames
@@ -982,96 +974,6 @@ void LoadTextures() {
     {
         std::cout << "\nError: failed to load skybox because " << errorString;
     }
-
-    // Basic texture2D
-    if (TextureMan->Create2DTextureFromBMPFile("moon_texture.bmp"))
-    {
-        std::cout << "Loaded moon texture." << std::endl;
-    }
-    else
-    {
-        std::cout << "Error: failed to load moon texture.";
-    }
-    if (TextureMan->Create2DTextureFromBMPFile("Beholder_Base_color.bmp"))
-    {
-        std::cout << "Loaded beholder texture." << std::endl;
-    }
-    else
-    {
-        std::cout << "Error: failed to load beholder texture.";
-    }
-
-    if (TextureMan->Create2DTextureFromBMPFile("man.bmp"))
-    {
-        std::cout << "Loaded man texture." << std::endl;
-    }
-    else
-    {
-        std::cout << "Error: failed to load man texture.";
-    }
-
-    if (TextureMan->Create2DTextureFromBMPFile("TropicalSunnyDayDown2048.bmp"))
-    {
-        std::cout << "Loaded mememan texture." << std::endl;
-    }
-    else
-    {
-        std::cout << "Error: failed to load computer texture.";
-    }
-
-    if (TextureMan->Create2DTextureFromBMPFile("ai-notes.bmp"))
-    {
-        std::cout << "Loaded computer texture." << std::endl;
-    }
-    else
-    {
-        std::cout << "Error: failed to load ai-notes texture.";
-    }
-
-    if (TextureMan->Create2DTextureFromBMPFile("crosshair_inverted.bmp"))
-    {
-        std::cout << "Loaded crosshair_inverted texture." << std::endl;
-    }
-    else
-    {
-        std::cout << "Error: failed to load crosshair texture.";
-    }
-
-    if (TextureMan->Create2DTextureFromBMPFile("crosshair.bmp"))
-    {
-        std::cout << "Loaded crosshair texture." << std::endl;
-    }
-    else
-    {
-        std::cout << "Error: failed to load crosshair texture.";
-    }
-    
-    if (TextureMan->Create2DTextureFromBMPFile("europa_texture.bmp"))
-    {
-        std::cout << "Loaded europa texture." << std::endl;
-    }
-    else
-    {
-        std::cout << "Error: failed to load europa texture.";
-    }
-    
-    if (TextureMan->Create2DTextureFromBMPFile("jupiter_texture.bmp"))
-    {
-        std::cout << "Loaded jupiter texture." << std::endl;
-    }
-    else
-    {
-        std::cout << "Error: failed to load jupiter texture.";
-    }
-    
-    if (TextureMan->Create2DTextureFromBMPFile("basketball_sph.bmp"))
-    {
-        std::cout << "Loaded basketball texture." << std::endl;
-    }
-    else
-    {
-        std::cout << "Error: failed to load basketball texture.";
-    }
     
     if (TextureMan->Create2DTextureFromBMPFile("traversal_graph.bmp"))
     {
@@ -1138,16 +1040,6 @@ void RenderToFBO(GLFWwindow* window, sCamera* camera, glm::mat4& view, glm::mat4
     GLint FBO_TextureLocation = glGetUniformLocation(shaderID, "FBO_Texture");
     glUniform1i(FBO_TextureLocation, texture21Unit);
 
-    // Crosshair Texture
-    // GLuint crosshairTextureID = TextureMan->getTextureIDFromName("crosshair.bmp");
-    // 
-    // GLuint texture15Unit = 15;
-    // glActiveTexture(texture15Unit + GL_TEXTURE0);
-    // glBindTexture(GL_TEXTURE_2D, crosshairTextureID);
-    // 
-    // GLint crosshairTextureLocation = glGetUniformLocation(shaderID, "crosshair_texture");
-    // glUniform1i(crosshairTextureLocation, texture15Unit);
-
     full_screen_quad->SetUniformScale(10.f);
     full_screen_quad->isVisible = true;
 
@@ -1189,26 +1081,9 @@ void LoadPlyFilesIntoVAO(void)
         std::cerr << "Could not load model into VAO" << std::endl;
     }
 
-    sModelDrawInfo terrain_obj;
-    plyLoader->LoadModel(meshFiles[4], terrain_obj);
-    if (!VAOMan->LoadModelIntoVAO("terrain", terrain_obj, shaderID)) {
-        std::cerr << "Could not load model into VAO" << std::endl;
-    }
-
     sModelDrawInfo flat_plain_obj;
     plyLoader->LoadModel(meshFiles[9], flat_plain_obj);
     if (!VAOMan->LoadModelIntoVAO("flat_plain", flat_plain_obj, shaderID)) {
-        std::cerr << "Could not load model into VAO" << std::endl;
-    }
-
-    plyLoader->LoadModel(meshFiles[8], player_obj);
-    if (!VAOMan->LoadModelIntoVAO("player", player_obj, shaderID)) {
-        std::cerr << "Could not load model into VAO" << std::endl;
-    }
-
-    sModelDrawInfo moon_obj;
-    plyLoader->LoadModel(meshFiles[5], moon_obj);
-    if (!VAOMan->LoadModelIntoVAO("moon", moon_obj, shaderID)) {
         std::cerr << "Could not load model into VAO" << std::endl;
     }
 

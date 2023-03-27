@@ -1,7 +1,7 @@
-6
+4
 
 bulb
-position -55.0 2000.0 -315.0
+position 0.0 5000.0 0.0
 rotation 0.0 0.0 0.0
 scale 0.1 0.1 0.1
 
@@ -14,16 +14,6 @@ flat_plain
 position 0.0 0.0 0.0
 rotation 0.0 0.0 0.0
 scale 1.0 1.0 1.0
-
-player
-position -85.0 -100.0 -320.0
-rotation 0.0 0.0 0.0
-scale 1.0 1.0 1.0
-
-moon
-position -1800.0 1000.0 400.0
-rotation 0.0 0.0 0.0
-scale 100.0 100.0 100.0
 
 pyramid
 position -180.0 12.0 -150.0
