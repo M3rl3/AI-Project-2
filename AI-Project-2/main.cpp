@@ -545,17 +545,29 @@ void Render() {
     // reads scene descripion files for positioning and other info
     ReadSceneDescription(meshArray);
 
+    // Read the bmp pixel data for info on wall placement
     if (!BitmapStream("../assets/textures/ex_traversal_graph.bmp", graph)) {
         std::cout << "Could not open BMP file." << std::endl;
     }
 
+    // offset
     wallPos = glm::vec3(-2500.0, 0.0, -2000.0);
 
+    // Generate the cube meshes and put them in a vector
     GenerateCubes(wallPos, 75.f, cubes);
 
-    glm::vec2 startPos;
-    glm::vec2 goalPos;
+    // initialize
+    glm::vec2 startPos = glm::vec2(0);
+    glm::vec2 goalPos = glm::vec2(0);
 
+    // Iterate the graph of pixel colors and convert it  
+    // into a format that the A* algorithm understands 
+    // (Array of 0s and 1s)
+    // 
+    // black pixel(0) == blocked
+    // white pixel(1) == unblocked
+    // red pixel == goal node
+    // green pixel == start node
     for (int i = 0; i < graph.size(); i++) {
         for (int j = 0; j < graph[i].size(); j++) {
             if (graph[i][j] == glm::vec3(0.f)) {
@@ -579,13 +591,13 @@ void Render() {
         }
     }
 
-    // Source
+    // Source/Start
     Pair src = make_pair(startPos.x, startPos.y);
 
     // Destination
     Pair dest = make_pair(goalPos.x, goalPos.y);
 
-    // Object
+    // Object init
     A_STAR aStar;
 
     // Run the actual search and print results
@@ -653,13 +665,15 @@ void Update() {
     glUniformMatrix4fv(viewLocation, 1, GL_FALSE, glm::value_ptr(view));
     glUniformMatrix4fv(projectionLocation, 1, GL_FALSE, glm::value_ptr(projection));
 
-    // Set the camera to follow the agent
+    // Set the camera to always follow the agent
     if (!enableMouse) {
         camera->target = agent->position;
     }
     
+    // Increment the frame counter
     elapsed_frames++;
 
+    // Draw scene meshes
     for (int i = 0; i < meshArray.size(); i++) {
 
         cMeshInfo* currentMesh = meshArray[i];
@@ -667,17 +681,21 @@ void Update() {
         // Check if the current object is the agent
         if (currentMesh->friendlyName == "agent") {
 
-            // Assign position according to the path found by the A* algorithm
+            // Assign agent position according to the path discovered by the A* algorithm
             currentMesh->position = positions[(int)path[index].x][(int)path[index].y];
 
             // Move to the next position after x amount of frames
             if (elapsed_frames > 10) {
+                // Did we hit the goal?
                 if (index == path.size() - 1) {
+                    // stay there then
                     index = path.size() - 1;
                 }
-                else {
+                else { // No?
+                    // Next position on the list
                     index++;
                 }
+                // Reset the frame counter for a new iteration
                 elapsed_frames = 0;
             }
         }
@@ -694,6 +712,7 @@ void Update() {
         
     }
     
+    // Draw the walls the agent will traverse through
     for (int i = 0; i < cubes.size(); i++) {
 
         cMeshInfo* currentMesh = cubes[i];
@@ -707,7 +726,6 @@ void Update() {
                  camera,                // Instance of the struct Camera
                  modelLocaction,        // UL for model matrix
                  modelInverseLocation); // UL for transpose of model matrix
-        
     }
 
     // Draw the skybox
@@ -732,6 +750,7 @@ void Update() {
     //const GLubyte* vendor = glad_glGetString(GL_VENDOR); // Returns the vendor
     const GLubyte* renderer = glad_glGetString(GL_RENDERER); // Returns a hint to the model
 
+    // Set window title
     if (timeDiff >= 1.f / 30.f) {
         std::string frameRate = std::to_string((1.f / timeDiff) * frameCount);
         std::string frameTime = std::to_string((timeDiff / frameCount) * 1000);
@@ -757,9 +776,9 @@ void Update() {
                << "    GPU: " << renderer
                << "    FPS: " << frameRate << " ms: " << frameTime
                ;
-        }
-        
+        }   
 
+        // Set window title
         glfwSetWindowTitle(window, ss.str().c_str());
 
         beginTime = currentTime;

@@ -431,7 +431,7 @@ void ReadSceneDescription(std::vector<cMeshInfo*>& meshArray) {
             /*meshArray[i]->rotation.x = rotation.x;
             meshArray[i]->rotation.y = rotation.y;
             meshArray[i]->rotation.z = rotation.z;*/
-            meshArray[i]->AdjustRoationAngleFromEuler(rotation);
+            meshArray[i]->SetRotationFromEuler(rotation);
         }
         if (input3 == "scale") {
             meshArray[i]->scale.x = scale.x;
